@@ -1,0 +1,14 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+	longpaths = true
+[user]
+	email = nithin12342@users.noreply.github.com
+	name = nithin12342
+[remote "origin"]
+	url = https://github.com/nithin12342/01-personal-portfolio-website-cloud.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
