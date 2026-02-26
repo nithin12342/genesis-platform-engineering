@@ -1,0 +1,20 @@
+{
+  "name": "Genesis Platform Engineering",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli": "latest",
+    "ghcr.io/devcontainers/features/azure-cli": "latest",
+    "ghcr.io/devcontainers/features/docker-in-docker": "latest"
+  },
+  "postCreateCommand": "pip install --user -r requirements-dev.txt || true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "hashicorp.terraform",
+        "ms-azuretools.vscode-azurecli"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

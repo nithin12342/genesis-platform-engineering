@@ -1,0 +1,53 @@
+name: Merge external repo into meta-repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: 'Source repo full name (owner/repo)'
+        required: true
+      target_subdir:
+        description: 'Target subdirectory path (e.g. migrated/platform-module)'
+        required: true
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add source remote
+        run: |
+          git remote add src "https://github.com/${{ github.event.inputs.source_repo }}"
+          git fetch src --no-tags --prune
+
+      - name: Subtree add (fast mode)
+        run: |
+          mkdir -p "${{ github.event.inputs.target_subdir }}"
+          git checkout --orphan temp-merge || true
+          git reset --hard || true
+          git read-tree --prefix="${{ github.event.inputs.target_subdir }}" -u src/main || true
+          git add . || true
+          git commit -m "chore(migrate): add files from ${{ github.event.inputs.source_repo }}" || true
+          git checkout main || true
+          git merge --no-edit temp-merge || true
+          git branch -D temp-merge || true
+
+      - name: Secret & quick scan
+        uses: aquasecurity/trivy-action@v2
+        with:
+          scan-type: filesystem
+
+      - name: Create migration issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --title "Migration: ${{ github.event.inputs.source_repo }} -> ${{ github.event.inputs.target_subdir }}" --body "Merged via automated workflow. Check logs for details." || true
