@@ -1,0 +1,281 @@
+# Prometheus Recording Rules for SLO Tracking
+# These rules pre-compute metrics for efficient SLO tracking
+
+groups:
+  # ============================================================================
+  # nebula-cloud-platform Recording Rules
+  # ============================================================================
+  - name: nebula_cloud_platform_slos
+    interval: 30s
+    rules:
+      # API Availability (99.9% target)
+      - record: nebula:api:availability:ratio_30d
+        expr: |
+          sum(rate(http_requests_total{meta_repo="nebula-cloud-platform", status=~"2.."}[30d]))
+          /
+          sum(rate(http_requests_total{meta_repo="nebula-cloud-platform"}[30d]))
+      
+      # API Latency P99 (100ms target)
+      - record: nebula:api:latency:p99_7d
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(api_endpoint_latency_seconds_bucket{meta_repo="nebula-cloud-platform"}[7d])) by (le)
+          )
+      
+      # Cost Forecast Accuracy (95% target)
+      - record: nebula:cost:forecast_accuracy:avg_30d
+        expr: avg_over_time(cost_forecast_accuracy[30d])
+      
+      # GCP Free Tier Usage Percentage
+      - record: nebula:gcp:cloud_run:usage_percentage
+        expr: (gcp_usage_cloud_run_requests / 2000000) * 100
+      
+      - record: nebula:gcp:firestore_reads:usage_percentage
+        expr: (gcp_usage_firestore_reads / 50000) * 100
+      
+      - record: nebula:gcp:firestore_writes:usage_percentage
+        expr: (gcp_usage_firestore_writes / 20000) * 100
+      
+      - record: nebula:gcp:firestore_storage:usage_percentage
+        expr: (gcp_usage_firestore_storage / 1073741824) * 100  # 1GB in bytes
+      
+      - record: nebula:gcp:cloud_storage:usage_percentage
+        expr: (gcp_usage_cloud_storage / 5368709120) * 100  # 5GB in bytes
+
+  # ============================================================================
+  # sentinel-ai-engine Recording Rules
+  # ============================================================================
+  - name: sentinel_ai_engine_slos
+    interval: 30s
+    rules:
+      # Model Inference Availability (99% target)
+      - record: sentinel:inference:availability:ratio_7d
+        expr: |
+          sum(rate(model_predictions_total[7d]))
+          /
+          sum(rate(http_requests_total{meta_repo="sentinel-ai-engine"}[7d]))
+      
+      # Model Inference Latency P99 (500ms target)
+      - record: sentinel:inference:latency:p99_7d
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(model_inference_latency_seconds_bucket[7d])) by (le, model_name)
+          )
+      
+      # Model Accuracy Maintenance (95% of baseline)
+      - record: sentinel:model:accuracy:current
+        expr: avg(model_accuracy) by (model_name, model_version)
+      
+      # Model Drift Detection Rate
+      - record: sentinel:model:drift_rate:7d
+        expr: |
+          sum(changes(model_drift_detected[7d])) by (model_name)
+      
+      # Training Success Rate
+      - record: sentinel:training:success_rate:7d
+        expr: |
+          sum(rate(model_training_duration_seconds_count[7d]))
+          /
+          sum(rate(model_training_duration_seconds_count[7d]) + rate(model_training_failures_total[7d]))
+
+  # ============================================================================
+  # chronos-data-platform Recording Rules
+  # ============================================================================
+  - name: chronos_data_platform_slos
+    interval: 30s
+    rules:
+      # Pipeline Success Rate (99% target)
+      - record: chronos:pipeline:success_rate:7d
+        expr: |
+          sum(rate(airflow_task_success_rate[7d]))
+          /
+          count(airflow_task_success_rate)
+      
+      # Pipeline Latency P95 (1 hour target)
+      - record: chronos:pipeline:latency:p95_7d
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(data_pipeline_latency_seconds_bucket[7d])) by (le, pipeline_name)
+          )
+      
+      # Data Quality Check Success Rate (99% target)
+      - record: chronos:data_quality:success_rate:7d
+        expr: |
+          1 - (
+            sum(rate(data_quality_check_failures[7d]))
+            /
+            sum(rate(data_quality_check_failures[7d]) + rate(data_quality_check_success_total[7d]))
+          )
+      
+      # Records Processing Rate
+      - record: chronos:records:processing_rate:1h
+        expr: sum(rate(records_processed_total[1h])) by (pipeline_name, stage)
+      
+      # dbt Model Execution Time P95
+      - record: chronos:dbt:execution_time:p95_7d
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(dbt_model_execution_time_seconds_bucket[7d])) by (le, model_name)
+          )
+
+  # ============================================================================
+  # titan-microservices-mesh Recording Rules
+  # ============================================================================
+  - name: titan_microservices_mesh_slos
+    interval: 30s
+    rules:
+      # Service Availability (99.9% target)
+      - record: titan:service:availability:ratio_30d
+        expr: |
+          sum(rate(service_request_duration_seconds_count{status=~"2.."}[30d])) by (service)
+          /
+          sum(rate(service_request_duration_seconds_count[30d])) by (service)
+      
+      # Service Latency P99 (100ms target)
+      - record: titan:service:latency:p99_7d
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(service_request_duration_seconds_bucket[7d])) by (le, service, endpoint)
+          )
+      
+      # Event Processing Success Rate (99% target)
+      - record: titan:events:success_rate:7d
+        expr: |
+          sum(rate(events_processed_total[7d])) by (event_type)
+          /
+          sum(rate(events_processed_total[7d]) + rate(event_processing_failures_total[7d])) by (event_type)
+      
+      # Circuit Breaker Availability (99.9% target)
+      - record: titan:circuit_breaker:closed_ratio:7d
+        expr: |
+          sum(circuit_breaker_state == 0) by (service)
+          /
+          count(circuit_breaker_state) by (service)
+      
+      # Service Error Rate
+      - record: titan:service:error_rate:5m
+        expr: |
+          sum(rate(service_request_duration_seconds_count{status=~"5.."}[5m])) by (service)
+          /
+          sum(rate(service_request_duration_seconds_count[5m])) by (service)
+      
+      # Event Processing Latency P95
+      - record: titan:events:latency:p95_7d
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(event_processing_latency_seconds_bucket[7d])) by (le, event_type)
+          )
+
+  # ============================================================================
+  # obsidian-devsecops-platform Recording Rules
+  # ============================================================================
+  - name: obsidian_devsecops_platform_slos
+    interval: 30s
+    rules:
+      # Security Scan Execution Success (99% target)
+      - record: obsidian:scan:success_rate:7d
+        expr: |
+          sum(rate(security_scan_execution_time_seconds_count[7d]))
+          /
+          sum(rate(security_scan_execution_time_seconds_count[7d]) + rate(security_scan_failures_total[7d]))
+      
+      # Critical Findings (0 target)
+      - record: obsidian:findings:critical:current
+        expr: sum(security_scan_critical_findings) by (scanner)
+      
+      # Policy Compliance Rate (99% target)
+      - record: obsidian:policy:compliance_rate:30d
+        expr: |
+          1 - (
+            sum(rate(policy_violations_total[30d]))
+            /
+            sum(rate(policy_evaluations_total[30d]))
+          )
+      
+      # Findings Trend (7-day moving average)
+      - record: obsidian:findings:trend:7d
+        expr: |
+          avg_over_time(
+            (security_scan_critical_findings + security_scan_high_findings)[7d]
+          )
+      
+      # Remediation Time P95
+      - record: obsidian:remediation:time:p95_30d
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(security_finding_remediation_duration_seconds_bucket[30d])) by (le, severity)
+          )
+
+  # ============================================================================
+  # aurora-fullstack-saas Recording Rules
+  # ============================================================================
+  - name: aurora_fullstack_saas_slos
+    interval: 30s
+    rules:
+      # API Availability (99.9% target)
+      - record: aurora:api:availability:ratio_30d
+        expr: |
+          sum(rate(api_endpoint_latency_seconds_count{meta_repo="aurora-fullstack-saas", status=~"2.."}[30d]))
+          /
+          sum(rate(api_endpoint_latency_seconds_count{meta_repo="aurora-fullstack-saas"}[30d]))
+      
+      # API Latency P99 (100ms target)
+      - record: aurora:api:latency:p99_7d
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(api_endpoint_latency_seconds_bucket{meta_repo="aurora-fullstack-saas"}[7d])) by (le, endpoint)
+          )
+      
+      # WebSocket Connection Stability (99% target)
+      - record: aurora:websocket:stability:7d
+        expr: |
+          avg_over_time(active_websocket_connections[7d])
+          /
+          max_over_time(active_websocket_connections[7d])
+      
+      # Database Query Latency P95 (50ms target)
+      - record: aurora:database:latency:p95_7d
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(database_query_duration_seconds_bucket[7d])) by (le, query_type)
+          )
+      
+      # User Registration Success Rate (99% target)
+      - record: aurora:registration:success_rate:7d
+        expr: |
+          sum(rate(user_registration_total[7d]))
+          /
+          sum(rate(user_registration_total[7d]) + rate(user_registration_failures_total[7d]))
+      
+      # Active Users (daily)
+      - record: aurora:users:active:1d
+        expr: count(increase(user_login_total[1d])) by (login_method)
+      
+      # WebSocket Message Latency P99
+      - record: aurora:websocket:latency:p99_7d
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(websocket_message_latency_seconds_bucket[7d])) by (le, message_type)
+          )
+
+  # ============================================================================
+  # Cross-Meta-Repo SLO Compliance
+  # ============================================================================
+  - name: slo_compliance
+    interval: 1m
+    rules:
+      # Overall SLO Compliance by Service
+      - record: slo:compliance:overall
+        expr: avg(slo_compliance) by (service)
+      
+      # Error Budget Burn Rate (how fast we're consuming error budget)
+      - record: slo:error_budget:burn_rate:1h
+        expr: |
+          (1 - slo_availability)
+          /
+          (1 - slo_availability{slo_name="availability"})
+      
+      # SLO Violations Count
+      - record: slo:violations:count:24h
+        expr: |
+          count(slo_compliance < 100) by (service, slo_name)

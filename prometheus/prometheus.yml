@@ -1,0 +1,83 @@
+# Prometheus Configuration for Meta-Repositories
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'local-development'
+    environment: 'dev'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "recording-rules.yml"
+  - "alerting-rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # nebula-cloud-platform (Cost Tracking Dashboard)
+  - job_name: 'nebula-cloud-platform'
+    static_configs:
+      - targets: ['localhost:8001']
+        labels:
+          service: 'nebula-dashboard-api'
+          meta_repo: 'nebula-cloud-platform'
+          metrics_type: 'cost_tracking'
+
+  # sentinel-ai-engine (ML Inference)
+  - job_name: 'sentinel-ai-engine'
+    static_configs:
+      - targets: ['localhost:8002']
+        labels:
+          service: 'sentinel-inference-api'
+          meta_repo: 'sentinel-ai-engine'
+          metrics_type: 'ml_inference'
+
+  # chronos-data-platform (Data Pipeline)
+  - job_name: 'chronos-data-platform'
+    static_configs:
+      - targets: ['localhost:8003']
+        labels:
+          service: 'chronos-data-api'
+          meta_repo: 'chronos-data-platform'
+          metrics_type: 'data_pipeline'
+
+  # titan-microservices-mesh (Microservices)
+  - job_name: 'titan-microservices-mesh'
+    static_configs:
+      - targets: 
+          - 'localhost:8004'  # Order Service
+          - 'localhost:8005'  # Payment Service
+          - 'localhost:8006'  # Inventory Service
+        labels:
+          meta_repo: 'titan-microservices-mesh'
+          metrics_type: 'microservices'
+
+  # obsidian-devsecops-platform (Security Scanning)
+  - job_name: 'obsidian-devsecops-platform'
+    static_configs:
+      - targets: ['localhost:8007']
+        labels:
+          service: 'obsidian-security-api'
+          meta_repo: 'obsidian-devsecops-platform'
+          metrics_type: 'security_scanning'
+
+  # aurora-fullstack-saas (Full-Stack Application)
+  - job_name: 'aurora-fullstack-saas'
+    static_configs:
+      - targets: ['localhost:8008']
+        labels:
+          service: 'aurora-backend-api'
+          meta_repo: 'aurora-fullstack-saas'
+          metrics_type: 'fullstack_saas'

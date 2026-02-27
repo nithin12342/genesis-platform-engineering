@@ -1,0 +1,147 @@
+# SLO Definitions for Meta-Repositories
+# This file defines Service Level Objectives for each meta-repo
+
+# ============================================================================
+# nebula-cloud-platform SLOs
+# ============================================================================
+
+nebula_cloud_platform:
+  availability:
+    target: 0.999  # 99.9% availability
+    window_days: 30
+    description: "API availability SLO"
+    error_budget_minutes: 43.2  # ~43 minutes per month
+
+  latency_p99:
+    target: 0.1  # 100ms
+    window_days: 7
+    description: "P99 latency SLO"
+    
+  cost_forecast_accuracy:
+    target: 0.95  # 95% accuracy
+    window_days: 30
+    description: "Cost forecasting accuracy SLO"
+
+# ============================================================================
+# sentinel-ai-engine SLOs
+# ============================================================================
+
+sentinel_ai_engine:
+  model_inference_availability:
+    target: 0.99  # 99% availability
+    window_days: 7
+    description: "Model inference API availability"
+    error_budget_minutes: 100.8  # ~101 minutes per week
+
+  model_inference_latency_p99:
+    target: 0.5  # 500ms
+    window_days: 7
+    description: "Model inference P99 latency"
+
+  model_accuracy_maintenance:
+    target: 0.95  # 95% of baseline accuracy
+    window_days: 30
+    description: "Model accuracy maintenance SLO"
+
+# ============================================================================
+# chronos-data-platform SLOs
+# ============================================================================
+
+chronos_data_platform:
+  pipeline_success_rate:
+    target: 0.99  # 99% success rate
+    window_days: 7
+    description: "Data pipeline success rate"
+    error_budget_failures: 1  # 1 failure per week allowed
+
+  pipeline_latency_p95:
+    target: 3600  # 1 hour
+    window_days: 7
+    description: "Data pipeline P95 latency SLO"
+
+  data_quality_check_success_rate:
+    target: 0.99  # 99% success rate
+    window_days: 7
+    description: "Data quality check success rate SLO"
+
+# ============================================================================
+# titan-microservices-mesh SLOs
+# ============================================================================
+
+titan_microservices_mesh:
+  service_availability:
+    target: 0.999  # 99.9% availability
+    window_days: 30
+    description: "Microservice availability SLO"
+    error_budget_minutes: 43.2
+
+  service_latency_p99:
+    target: 0.1  # 100ms
+    window_days: 7
+    description: "Microservice P99 latency SLO"
+
+  event_processing_success_rate:
+    target: 0.99  # 99% success rate
+    window_days: 7
+    description: "Event processing success rate SLO"
+
+  circuit_breaker_availability:
+    target: 0.999  # 99.9% availability
+    window_days: 7
+    description: "Circuit breaker availability SLO"
+
+# ============================================================================
+# obsidian-devsecops-platform SLOs
+# ============================================================================
+
+obsidian_devsecops_platform:
+  security_scan_execution_success:
+    target: 0.99  # 99% success rate
+    window_days: 7
+    description: "Security scan execution success rate"
+
+  critical_findings_remediation_time:
+    target: 86400  # 24 hours
+    window_days: 30
+    description: "Time to remediate critical findings (seconds)"
+
+  zero_critical_findings:
+    target: 0  # Zero critical findings
+    window_days: 30
+    description: "Number of critical security findings"
+
+  policy_compliance_rate:
+    target: 0.99  # 99% compliance
+    window_days: 30
+    description: "Policy compliance rate SLO"
+
+# ============================================================================
+# aurora-fullstack-saas SLOs
+# ============================================================================
+
+aurora_fullstack_saas:
+  api_availability:
+    target: 0.999  # 99.9% availability
+    window_days: 30
+    description: "API availability SLO"
+    error_budget_minutes: 43.2
+
+  api_latency_p99:
+    target: 0.1  # 100ms
+    window_days: 7
+    description: "API P99 latency SLO"
+
+  websocket_connection_stability:
+    target: 0.99  # 99% stability
+    window_days: 7
+    description: "WebSocket connection stability SLO"
+
+  database_query_latency_p95:
+    target: 0.05  # 50ms
+    window_days: 7
+    description: "Database query P95 latency SLO"
+
+  user_registration_success_rate:
+    target: 0.99  # 99% success rate
+    window_days: 7
+    description: "User registration success rate SLO"

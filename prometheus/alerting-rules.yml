@@ -1,0 +1,378 @@
+# Prometheus Alerting Rules for SLO Violations
+# These rules trigger alerts when SLOs are violated or at risk
+
+groups:
+  # ============================================================================
+  # nebula-cloud-platform Alerts
+  # ============================================================================
+  - name: nebula_cloud_platform_alerts
+    interval: 1m
+    rules:
+      - alert: NebulaAPIAvailabilitySLOViolation
+        expr: nebula:api:availability:ratio_30d < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: nebula-cloud-platform
+          slo: availability
+        annotations:
+          summary: "Nebula API availability below SLO target"
+          description: "API availability is {{ $value | humanizePercentage }}, below 99.9% target"
+      
+      - alert: NebulaAPILatencySLOViolation
+        expr: nebula:api:latency:p99_7d > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: nebula-cloud-platform
+          slo: latency
+        annotations:
+          summary: "Nebula API P99 latency above SLO target"
+          description: "API P99 latency is {{ $value }}s, above 100ms target"
+      
+      - alert: NebulaGCPFreeT ierLimitApproaching
+        expr: |
+          nebula:gcp:cloud_run:usage_percentage > 80
+          or nebula:gcp:firestore_reads:usage_percentage > 80
+          or nebula:gcp:firestore_writes:usage_percentage > 80
+          or nebula:gcp:firestore_storage:usage_percentage > 80
+          or nebula:gcp:cloud_storage:usage_percentage > 80
+        for: 10m
+        labels:
+          severity: warning
+          meta_repo: nebula-cloud-platform
+          slo: cost_optimization
+        annotations:
+          summary: "GCP free tier limit approaching"
+          description: "GCP service usage is at {{ $value }}% of free tier limit"
+      
+      - alert: NebulaCostForecastAccuracyLow
+        expr: nebula:cost:forecast_accuracy:avg_30d < 0.95
+        for: 1h
+        labels:
+          severity: warning
+          meta_repo: nebula-cloud-platform
+          slo: forecast_accuracy
+        annotations:
+          summary: "Cost forecast accuracy below target"
+          description: "Cost forecast accuracy is {{ $value | humanizePercentage }}, below 95% target"
+
+  # ============================================================================
+  # sentinel-ai-engine Alerts
+  # ============================================================================
+  - name: sentinel_ai_engine_alerts
+    interval: 1m
+    rules:
+      - alert: SentinelInferenceAvailabilitySLOViolation
+        expr: sentinel:inference:availability:ratio_7d < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: sentinel-ai-engine
+          slo: availability
+        annotations:
+          summary: "Sentinel inference API availability below SLO"
+          description: "Inference API availability is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: SentinelInferenceLatencySLOViolation
+        expr: sentinel:inference:latency:p99_7d > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: sentinel-ai-engine
+          slo: latency
+        annotations:
+          summary: "Sentinel inference P99 latency above SLO"
+          description: "Inference P99 latency is {{ $value }}s, above 500ms target for model {{ $labels.model_name }}"
+      
+      - alert: SentinelModelDriftDetected
+        expr: model_drift_detected == 1
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: sentinel-ai-engine
+          slo: model_quality
+        annotations:
+          summary: "Model drift detected"
+          description: "Model {{ $labels.model_name }} version {{ $labels.model_version }} has detected drift"
+      
+      - alert: SentinelModelAccuracyDegraded
+        expr: sentinel:model:accuracy:current < 0.95
+        for: 15m
+        labels:
+          severity: warning
+          meta_repo: sentinel-ai-engine
+          slo: model_accuracy
+        annotations:
+          summary: "Model accuracy below maintenance threshold"
+          description: "Model {{ $labels.model_name }} accuracy is {{ $value | humanizePercentage }}, below 95% target"
+
+  # ============================================================================
+  # chronos-data-platform Alerts
+  # ============================================================================
+  - name: chronos_data_platform_alerts
+    interval: 1m
+    rules:
+      - alert: ChronosPipelineSuccessRateSLOViolation
+        expr: chronos:pipeline:success_rate:7d < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: chronos-data-platform
+          slo: pipeline_success
+        annotations:
+          summary: "Data pipeline success rate below SLO"
+          description: "Pipeline success rate is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: ChronosPipelineLatencySLOViolation
+        expr: chronos:pipeline:latency:p95_7d > 3600
+        for: 10m
+        labels:
+          severity: warning
+          meta_repo: chronos-data-platform
+          slo: latency
+        annotations:
+          summary: "Data pipeline P95 latency above SLO"
+          description: "Pipeline {{ $labels.pipeline_name }} P95 latency is {{ $value }}s, above 1 hour target"
+      
+      - alert: ChronosDataQualityCheckFailures
+        expr: rate(data_quality_check_failures[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: chronos-data-platform
+          slo: data_quality
+        annotations:
+          summary: "Data quality check failures detected"
+          description: "Data quality check {{ $labels.check_name }} is failing for {{ $labels.data_source }}"
+      
+      - alert: ChronosAirflowDAGFailed
+        expr: airflow_task_success_rate < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: chronos-data-platform
+          slo: pipeline_success
+        annotations:
+          summary: "Airflow DAG task failure"
+          description: "DAG {{ $labels.dag_id }} task {{ $labels.task_id }} success rate is {{ $value | humanizePercentage }}"
+
+  # ============================================================================
+  # titan-microservices-mesh Alerts
+  # ============================================================================
+  - name: titan_microservices_mesh_alerts
+    interval: 1m
+    rules:
+      - alert: TitanServiceAvailabilitySLOViolation
+        expr: titan:service:availability:ratio_30d < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: titan-microservices-mesh
+          slo: availability
+        annotations:
+          summary: "Microservice availability below SLO"
+          description: "Service {{ $labels.service }} availability is {{ $value | humanizePercentage }}, below 99.9% target"
+      
+      - alert: TitanServiceLatencySLOViolation
+        expr: titan:service:latency:p99_7d > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: titan-microservices-mesh
+          slo: latency
+        annotations:
+          summary: "Microservice P99 latency above SLO"
+          description: "Service {{ $labels.service }} endpoint {{ $labels.endpoint }} P99 latency is {{ $value }}s, above 100ms target"
+      
+      - alert: TitanCircuitBreakerOpen
+        expr: circuit_breaker_state == 1
+        for: 2m
+        labels:
+          severity: warning
+          meta_repo: titan-microservices-mesh
+          slo: resilience
+        annotations:
+          summary: "Circuit breaker opened"
+          description: "Circuit breaker for {{ $labels.service }} -> {{ $labels.dependency }} is open"
+      
+      - alert: TitanEventProcessingFailures
+        expr: titan:events:success_rate:7d < 0.99
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: titan-microservices-mesh
+          slo: event_processing
+        annotations:
+          summary: "Event processing success rate below SLO"
+          description: "Event type {{ $labels.event_type }} success rate is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: TitanServiceHighErrorRate
+        expr: titan:service:error_rate:5m > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: titan-microservices-mesh
+          slo: availability
+        annotations:
+          summary: "Service error rate above threshold"
+          description: "Service {{ $labels.service }} error rate is {{ $value | humanizePercentage }}, above 1% threshold"
+
+  # ============================================================================
+  # obsidian-devsecops-platform Alerts
+  # ============================================================================
+  - name: obsidian_devsecops_platform_alerts
+    interval: 1m
+    rules:
+      - alert: ObsidianCriticalSecurityFindings
+        expr: obsidian:findings:critical:current > 0
+        for: 1m
+        labels:
+          severity: critical
+          meta_repo: obsidian-devsecops-platform
+          slo: zero_critical_findings
+        annotations:
+          summary: "Critical security findings detected"
+          description: "{{ $value }} critical security findings detected by {{ $labels.scanner }}"
+      
+      - alert: ObsidianSecurityScanFailures
+        expr: obsidian:scan:success_rate:7d < 0.99
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: obsidian-devsecops-platform
+          slo: scan_execution
+        annotations:
+          summary: "Security scan execution success rate below SLO"
+          description: "Security scan success rate is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: ObsidianPolicyComplianceLow
+        expr: obsidian:policy:compliance_rate:30d < 0.99
+        for: 10m
+        labels:
+          severity: warning
+          meta_repo: obsidian-devsecops-platform
+          slo: policy_compliance
+        annotations:
+          summary: "Policy compliance rate below SLO"
+          description: "Policy compliance rate is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: ObsidianSecurityFindingsTrending Up
+        expr: |
+          (obsidian:findings:trend:7d - obsidian:findings:trend:7d offset 7d)
+          / obsidian:findings:trend:7d offset 7d > 0.2
+        for: 1h
+        labels:
+          severity: warning
+          meta_repo: obsidian-devsecops-platform
+          slo: security_posture
+        annotations:
+          summary: "Security findings trending upward"
+          description: "Security findings have increased by {{ $value | humanizePercentage }} over the past week"
+
+  # ============================================================================
+  # aurora-fullstack-saas Alerts
+  # ============================================================================
+  - name: aurora_fullstack_saas_alerts
+    interval: 1m
+    rules:
+      - alert: AuroraAPIAvailabilitySLOViolation
+        expr: aurora:api:availability:ratio_30d < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: aurora-fullstack-saas
+          slo: availability
+        annotations:
+          summary: "Aurora API availability below SLO"
+          description: "API availability is {{ $value | humanizePercentage }}, below 99.9% target"
+      
+      - alert: AuroraAPILatencySLOViolation
+        expr: aurora:api:latency:p99_7d > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: aurora-fullstack-saas
+          slo: latency
+        annotations:
+          summary: "Aurora API P99 latency above SLO"
+          description: "Endpoint {{ $labels.endpoint }} P99 latency is {{ $value }}s, above 100ms target"
+      
+      - alert: AuroraWebSocketConnectionUnstable
+        expr: aurora:websocket:stability:7d < 0.99
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: aurora-fullstack-saas
+          slo: websocket_stability
+        annotations:
+          summary: "WebSocket connection stability below SLO"
+          description: "WebSocket stability is {{ $value | humanizePercentage }}, below 99% target"
+      
+      - alert: AuroraDatabaseLatencySLOViolation
+        expr: aurora:database:latency:p95_7d > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          meta_repo: aurora-fullstack-saas
+          slo: database_latency
+        annotations:
+          summary: "Database query P95 latency above SLO"
+          description: "Query type {{ $labels.query_type }} P95 latency is {{ $value }}s, above 50ms target"
+      
+      - alert: AuroraUserRegistrationFailures
+        expr: aurora:registration:success_rate:7d < 0.99
+        for: 5m
+        labels:
+          severity: critical
+          meta_repo: aurora-fullstack-saas
+          slo: registration_success
+        annotations:
+          summary: "User registration success rate below SLO"
+          description: "Registration success rate is {{ $value | humanizePercentage }}, below 99% target"
+
+  # ============================================================================
+  # Cross-Meta-Repo SLO Alerts
+  # ============================================================================
+  - name: slo_cross_repo_alerts
+    interval: 1m
+    rules:
+      - alert: SLOErrorBudgetExhausted
+        expr: slo_budget_remaining <= 0
+        for: 5m
+        labels:
+          severity: critical
+          slo: error_budget
+        annotations:
+          summary: "SLO error budget exhausted"
+          description: "Service {{ $labels.service }} SLO {{ $labels.slo_name }} has exhausted its error budget"
+      
+      - alert: SLOErrorBudgetBurningFast
+        expr: slo:error_budget:burn_rate:1h > 10
+        for: 5m
+        labels:
+          severity: warning
+          slo: error_budget
+        annotations:
+          summary: "SLO error budget burning fast"
+          description: "Service {{ $labels.service }} is burning error budget at {{ $value }}x the normal rate"
+      
+      - alert: SLOComplianceLow
+        expr: slo:compliance:overall < 95
+        for: 10m
+        labels:
+          severity: warning
+          slo: compliance
+        annotations:
+          summary: "Overall SLO compliance low"
+          description: "Service {{ $labels.service }} overall SLO compliance is {{ $value }}%, below 95% threshold"
+      
+      - alert: MultipleSLOViolations
+        expr: slo:violations:count:24h > 3
+        for: 5m
+        labels:
+          severity: critical
+          slo: compliance
+        annotations:
+          summary: "Multiple SLO violations detected"
+          description: "Service {{ $labels.service }} has {{ $value }} SLO violations in the past 24 hours"

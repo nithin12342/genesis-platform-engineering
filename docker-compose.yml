@@ -1,0 +1,8 @@
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f prometheus grafana
