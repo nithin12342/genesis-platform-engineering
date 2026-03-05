@@ -1,0 +1,137 @@
+{
+  "context_specification": {
+    "project": {
+      "id": "genesis-platform-engineering",
+      "name": "Genesis Platform Engineering",
+      "version": "1.0.0",
+      "description": "Internal Developer Platform (IDP) meta-repository",
+      "domain": "Internal Developer Platform (IDP)",
+      "organization": "Dulux Tech",
+      "methodology": "Platform Engineering + DevOps"
+    },
+    "domain_context": {
+      "bounded_context": "Platform Engineering",
+      "users": "Engineering teams (internal customers)",
+      "core_responsibilities": [
+        "Developer portal management",
+        "GitOps controller operation",
+        "Infrastructure control plane",
+        "Cost optimization",
+        "Scaffolding and templates"
+      ],
+      "upstream_dependencies": [
+        "nebula-cloud-platform"
+      ],
+      "downstream_consumers": [
+        "All development teams"
+      ]
+    },
+    "key_components": [
+      {
+        "id": "backstage-portal",
+        "description": "Internal developer portal",
+        "responsibilities": [
+          "Service catalog",
+          "Documentation",
+          "Software templates",
+          "Plugin management"
+        ]
+      },
+      {
+        "id": "gitops-controller",
+        "description": "GitOps deployment controllers",
+        "responsibilities": [
+          "ArgoCD management",
+          "Flux operations",
+          "Sync automation"
+        ]
+      },
+      {
+        "id": "crossplane",
+        "description": "Cloud control plane",
+        "responsibilities": [
+          "Composite resources",
+          "Provider configurations",
+          "Self-service provisioning"
+        ]
+      },
+      {
+        "id": "cost-optimization",
+        "description": "Cloud cost management",
+        "responsibilities": [
+          "Cost visibility",
+          "Budget enforcement",
+          "Optimization recommendations"
+        ]
+      },
+      {
+        "id": "scaffolding-templates",
+        "description": "Project templates and scaffolding",
+        "responsibilities": [
+          "Service templates",
+          "Infrastructure templates",
+          "CI/CD templates"
+        ]
+      }
+    ],
+    "technology_stack": {
+      "developer_portal": ["Backstage", "Port", "Cortex"],
+      "gitops": ["ArgoCD", "Flux", "Azure Arc-enabled Kubernetes"],
+      "control_plane": ["Crossplane", "Azure Developer CLI", "Bicep"],
+      "cost_management": ["Azure Cost Management", "Kubecost", "CloudHealth"],
+      "service_catalog": ["Backstage", "Azure Purview"]
+    },
+    "architecture_principles": [
+      "Self-Service: Developers provision resources on-demand",
+      "Golden Paths: Opinionated workflows for faster delivery",
+      "GitOps: All configuration in Git",
+      "Platform as Product: Treat platform as internal product",
+      "Developer Experience: Focus on DX metrics",
+      "Cost Transparency: Show cost per team/project"
+    ],
+    "development_phases": {
+      "phase_1": {
+        "name": "Foundation",
+        "duration": "2 weeks",
+        "deliverables": [
+          "Backstage portal setup",
+          "GitOps infrastructure",
+          "Basic service templates",
+          "CI/CD pipelines"
+        ]
+      },
+      "phase_2": {
+        "name": "Core Platform",
+        "duration": "3 weeks",
+        "deliverables": [
+          "Self-service provisioning",
+          "Crossplane Azure provider",
+          "Cost management",
+          "Security scanning integration"
+        ]
+      },
+      "phase_3": {
+        "name": "Advanced Features",
+        "duration": "3 weeks",
+        "deliverables": [
+          "Advanced templates",
+          "Analytics dashboard",
+          "Custom plugins",
+          "Ecosystem integrations"
+        ]
+      }
+    },
+    "quality_requirements": {
+      "test_coverage": 90,
+      "documentation": "required",
+      "platform_availability": 99.9,
+      "developer_satisfaction": "≥80%"
+    },
+    "success_criteria": {
+      "developer_adoption": "≥80%",
+      "deployment_time": "<10 min",
+      "self_service_rate": "≥70%",
+      "cost_savings": "≥20%"
+    }
+  }
+}

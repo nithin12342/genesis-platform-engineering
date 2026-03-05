@@ -1,0 +1,190 @@
+{
+  "harness": {
+    "project": "genesis-platform-engineering",
+    "version": "1.0.0",
+    "description": "Harness configuration for Genesis Platform Engineering - Internal Developer Platform",
+    "created_date": "2026-03-05"
+  },
+  "developer_portal": {
+    "tool": "Backstage",
+    "version": "1.25",
+    "plugins": [
+      "catalog",
+      "techdocs",
+      "scaffolder",
+      "search",
+      "kubernetes",
+      "argo-cd",
+      "sonarqube",
+      "azure-pipelines"
+    ],
+    "authentication": "OAuth2 with Azure AD"
+  },
+  "gitops_harness": {
+    "tool": "ArgoCD",
+    "version": "2.9",
+    "deployment_pattern": "GitOps",
+    "sync_policy": "automated",
+    "prune": true,
+    "self_heal": true,
+    "applications": 100,
+    "projects": 10
+  },
+  "control_plane_harness": {
+    "tool": "Crossplane",
+    "version": "1.14",
+    "providers": [
+      "azure",
+      "aws",
+      "gcp"
+    ],
+    "compositions": [
+      "database",
+      "kubernetes",
+      "serverless"
+    ],
+    "provisioning": "self_service"
+  },
+  "cost_management": {
+    "tool": "Azure Cost Management",
+    "version": "1.108",
+    "features": [
+      "cost_allocation",
+      "savings_estimates",
+      "budget_alerts",
+      "right_sizing"
+    ],
+    "reporting": "daily",
+    "granularity": "hourly"
+  },
+  "ci_cd_harness": {
+    "pipeline_stages": [
+      {
+        "name": "validate",
+        "actions": ["lint", "format"]
+      },
+      {
+        "name": "test",
+        "actions": ["unit tests", "integration tests"]
+      },
+      {
+        "name": "build",
+        "actions": ["docker build", "helm package"]
+      },
+      {
+        "name": "security",
+        "actions": ["trivy", "semgrep"]
+      },
+      {
+        "name": "deploy",
+        "actions": ["argo cd sync", "smoke tests"]
+      }
+    ],
+    "quality_gates": {
+      "test_coverage": 90,
+      "security_scan": true,
+      "approval_required": true
+    }
+  },
+  "testing_harness": {
+    "unit_tests": {
+      "framework": "pytest/jest",
+      "coverage_threshold": 90
+    },
+    "integration_tests": {
+      "framework": "kitchen-terraform",
+      "environment": "staging"
+    },
+    "platform_tests": {
+      "framework": "cypress",
+      "scope": "backstage"
+    }
+  },
+  "scaffolding_templates": {
+    "service_templates": [
+      "go-service",
+      "python-service",
+      "node-service",
+      "java-service"
+    ],
+    "infrastructure_templates": [
+      "aks-cluster",
+      "azure-sql-database",
+      "azure-functions"
+    ],
+    "cicd_templates": [
+      "github-actions",
+      "azure-pipelines",
+      "gitlab-ci"
+    ]
+  },
+  "observability_harness": {
+    "metrics": {
+      "backend": "Prometheus",
+      "platform_metrics": [
+        "deployment_frequency",
+        "lead_time",
+        "mttr",
+        "change_failure_rate"
+      ]
+    },
+    "dashboards": [
+      {
+        "name": "Platform Health",
+        "metrics": ["uptime", "errors", "latency"]
+      },
+      {
+        "name": "Developer Experience",
+        "metrics": ["adoption", "satisfaction", "deployment_time"]
+      },
+      {
+        "name": "Cost Overview",
+        "metrics": ["daily_cost", "savings", "budget"]
+      }
+    ]
+  },
+  "automation_harness": {
+    "scripts": {
+      "create_app": "scripts/create-app.sh",
+      "provision_infra": "scripts/provision-infra.sh",
+      "setup_gitops": "scripts/setup-gitops.sh"
+    },
+    "cron_jobs": [
+      {
+        "name": "cost-report",
+        "schedule": "daily"
+      },
+      {
+        "name": "cleanup",
+        "schedule": "weekly"
+      }
+    ]
+  },
+  "self_service_portal": {
+    "catalog_items": [
+      "services",
+      "databases",
+      "kubernetes_clusters",
+      "azure_functions",
+      "azure_resources"
+    ],
+    "approval_workflow": "optional",
+    "quota_enforcement": true
+  },
+  "golden_paths": {
+    "frontend": {
+      "framework": "Next.js",
+      "cicd": "GitHub Actions",
+      "infrastructure": "Azure Static Web Apps"
+    },
+    "backend": {
+      "framework": "FastAPI",
+      "cicd": "GitHub Actions",
+      "infrastructure": "Azure Container Apps"
+    },
+    "data": {
+      "pipeline": "Azure Data Factory",
+      "storage": "Azure Data Lake + Synapse"
+    }
+  }
+}
