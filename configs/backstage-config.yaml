@@ -1,0 +1,116 @@
+# Genesis Platform Engineering - Backstage Configuration
+# Internal Developer Portal (IDP) Configuration
+
+app:
+  title: Genesis Developer Portal
+  baseUrl: http://localhost:3000
+
+organization:
+  name: Dulux Tech
+
+backend:
+  baseUrl: http://localhost:7007
+  cors:
+    origin: http://localhost:3000
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+  auth:
+    providers:
+      github:
+        development:
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+
+# Plugin Configuration
+plugins:
+  # Catalog - Service Discovery
+  catalog:
+    locations:
+      - type: url
+        target: https://github.com/dulux-tech/catalog/blob/main/all.yaml
+        rules:
+          - allow: [Component, API, Resource, Location]
+      # Local file-based catalog
+      - type: file
+        target: ./catalog-info.yaml
+
+  # TechDocs - Documentation
+  techdocs:
+    builder: local
+    generator:
+      runIn: local
+    publisher:
+      type: local
+      paths:
+        source: ./docs
+
+  # Kubernetes - Cluster Management
+  kubernetes:
+    serviceLocatorMethod:
+      type: 'multiTenant'
+    clusterLocatorMethods:
+      - type: 'config'
+    clusters:
+      - name: staging
+        url: ${STAGING_K8S_URL}
+        authProvider: 'serviceAccount'
+        serviceAccountToken: ${STAGING_K8S_TOKEN}
+      - name: production
+        url: ${PROD_K8S_URL}
+        authProvider: 'serviceAccount'
+        serviceAccountToken: ${PROD_K8S_TOKEN}
+
+  # ArgoCD - GitOps
+  argocd:
+    baseUrl: ${ARGOCD_BASE_URL}
+    username: ${ARGOCD_USERNAME}
+    password: ${ARGOCD_PASSWORD}
+    token: ${ARGOCD_TOKEN}
+
+  # SonarQube - Code Quality
+  sonarqube:
+    baseUrl: ${SONARQUBE_URL}
+    token: ${SONARQUBE_TOKEN}
+
+  # Azure DevOps - CI/CD
+  azure-devops:
+    host: dev.azure.com
+    organization: dulux-tech
+    token: ${AZURE_DEVOPS_TOKEN}
+
+# Authentication
+auth:
+  providers:
+    github:
+      enabled: true
+    azure:
+      enabled: true
+      clientId: ${AZURE_CLIENT_ID}
+      clientSecret: ${AZURE_CLIENT_SECRET}
+      tenantId: ${AZURE_TENANT_ID}
+
+# Scaffolder - Service Templates
+scaffolder:
+  github:
+    token: ${GITHUB_TOKEN}
+  azure:
+    token: ${AZURE_DEVOPS_TOKEN}
+
+# Search
+search:
+  collators:
+    - type: default
+      schedule: '* * * * *'
+
+# Permission Framework
+permission:
+  enabled: true
+
+# Custom Theme
+theme:
+  palette:
+    primary:
+      main: '#0066cc'
+    secondary:
+      main: '#00aaff'

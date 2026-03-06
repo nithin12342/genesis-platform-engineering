@@ -1,0 +1,173 @@
+# Genesis Platform Engineering - Crossplane Compositions
+# Self-Service Infrastructure Provisioning
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: database.azure.genesis.dulux.tech
+  labels:
+    provider: azure
+    type: database
+spec:
+  writeConnectionSecretsFromNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: genesis.dulux.tech/v1alpha1
+    kind: Database
+  patchSets:
+    - name: common
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.labels
+          toFieldPath: metadata.labels
+  resources:
+    # Azure SQL Database
+    - name: sqlDatabase
+      base:
+        apiVersion: database.azure.upbound.io/v1beta1
+        kind: MSSQLDatabase
+        spec:
+          forProvider:
+            location: eastus
+            skuName: S0
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: spec.parameters.size
+          toFieldPath: spec.forProvider.skuName
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.serverName
+          transform:
+            type: String
+            string:
+              fmt: "%s-sqlserver"
+    # Firewall Rule
+    - name: firewallRule
+      base:
+        apiVersion: database.azure.upbound.io/v1beta1
+        kind: MSSQLFirewallRule
+        spec:
+          forProvider:
+            resourceGroupName: genesis-rg
+            serverName: ""
+            startIpAddress: 0.0.0.0
+            endIpAddress: 255.255.255.255
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.serverName
+          transform:
+            type: String
+            string:
+              fmt: "%s-sqlserver"
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: redis.azure.genesis.dulux.tech
+  labels:
+    provider: azure
+    type: cache
+spec:
+  writeConnectionSecretsFromNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: genesis.dulux.tech/v1alpha1
+    kind: Cache
+  resources:
+    - name: redisCache
+      base:
+        apiVersion: cache.azure.upbound.io/v1beta1
+        kind: RedisCache
+        spec:
+          forProvider:
+            location: eastus
+            skuName: Standard
+            capacity: 1
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: spec.parameters.capacity
+          toFieldPath: spec.forProvider.capacity
+        - fromFieldPath: spec.parameters.sku
+          toFieldPath: spec.forProvider.skuName
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: bucket.azure.genesis.dulux.tech
+  labels:
+    provider: azure
+    type: storage
+spec:
+  writeConnectionSecretsFromNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: genesis.dulux.tech/v1alpha1
+    kind: Bucket
+  resources:
+    - name: storageAccount
+      base:
+        apiVersion: storage.azure.upbound.io/v1beta1
+        kind: Account
+        spec:
+          forProvider:
+            location: eastus
+            accountKind: StorageV2
+            accountTier: Standard
+            enableHttpsTrafficOnly: true
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.tags
+          transform:
+            type: Map
+            map:
+              environment: production
+    - name: blobContainer
+      base:
+        apiVersion: storage.azure.upbound.io/v1beta1
+        kind: Container
+        spec:
+          forProvider:
+            containerAccessType: private
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.storageAccountName
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: kubernetes.azure.genesis.dulux.tech
+  labels:
+    provider: azure
+    type: cluster
+spec:
+  writeConnectionSecretsFromNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: genesis.dulux.tech/v1alpha1
+    kind: KubernetesCluster
+  resources:
+    - name: aksCluster
+      base:
+        apiVersion: container.azure.upbound.io/v1beta1
+        kind: Cluster
+        spec:
+          forProvider:
+            location: eastus
+            kubernetesVersion: "1.28"
+            defaultNodePool:
+              - name: default
+                vmSize: Standard_D2s_v3
+                nodeCount: 3
+          providerConfigRef:
+            name: azure
+      patches:
+        - fromFieldPath: spec.parameters.size
+          toFieldPath: spec.forProvider.defaultNodePool[0].vmSize
+        - fromFieldPath: spec.parameters.nodeCount
+          toFieldPath: spec.forProvider.defaultNodePool[0].nodeCount
